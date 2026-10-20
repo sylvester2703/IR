@@ -1,0 +1,299 @@
+#Build the web crawler to pull product information and links from an e-commerce website
+%pip install requests beautifulsoup4 pandas
+
+# 5. Build a web crawler to pull product information
+# and links from an e-commerce website.
+
+%pip install requests beautifulsoup4 pandas
+
+import requests
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
+
+# Step 1: Accept website URL
+url = input("Enter e-commerce website URL: ").strip()
+
+if not urlparse(url).scheme:
+    url = "https://" + url
+
+if urlparse(url).scheme not in ("http", "https") or not urlparse(url).hostname:
+    print("Invalid URL. Please enter a valid website URL.")
+else:
+    try:
+        # Step 2: Fetch webpage
+        response = requests.get(
+            url,
+            headers={"User-Agent": "Mozilla/5.0"},
+            timeout=15
+        )
+        response.raise_for_status()
+
+        # Step 3: Parse HTML
+        soup = BeautifulSoup(response.text, "html.parser")
+
+        # Step 4: Find common product containers
+        selectors = [
+            "[itemtype*='Product']",
+            "[data-component-type='s-search-result']",
+            ".product-card",
+            ".product-item",
+            ".product",
+            ".product_pod",
+            "li.product"
+        ]
+
+        containers = []
+        for selector in selectors:
+            containers.extend(soup.select(selector))
+
+        products = []
+        seen_links = set()
+
+        # Step 5: Extract product information
+        for item in containers:
+            title = item.select_one(
+                "[itemprop='name'], h2, h3, "
+                ".product-title, .product-name"
+            )
+            link = item.select_one("a[href]")
+            price = item.select_one(
+                "[itemprop='price'], .price, .product-price, "
+                ".a-price .a-offscreen"
+            )
+
+            # Use image alt text if the title is missing
+            if title:
+                name = title.get("content") or title.get_text(" ", strip=True)
+            else:
+                image = item.select_one("img[alt]")
+                name = image.get("alt", "").strip() if image else ""
+
+            if not name or not link:
+                continue
+
+            product_url = urljoin(url, link.get("href", ""))
+
+            if not product_url or product_url in seen_links:
+                continue
+
+            if urlparse(product_url).scheme not in ("http", "https"):
+                continue
+
+            seen_links.add(product_url)
+
+            price_value = "N/A"
+            if price:
+                price_value = (
+                    price.get("content")
+                    or price.get_text(" ", strip=True)
+                )
+
+            products.append({
+                "Product": name,
+                "Price": price_value,
+                "Link": product_url
+            })
+
+        # Step 6: Display results
+        if products:
+            for product in products:
+                print("\nProduct:", product["Product"])
+                print("Price:", product["Price"])
+                print("Link:", product["Link"])
+                print("-" * 40)
+        else:
+            print("No products detected in the returned HTML.")
+            print("The website may use different HTML selectors,")
+            print("JavaScript rendering, or access restrictions.")
+
+    except requests.RequestException as error:
+        print("Unable to access website:", error)
+
+
+
+"""
+#long Code:-
+
+# 5. Build a web crawler to pull product information
+# and links from an e-commerce website.
+
+import json
+import requests
+import pandas as pd
+
+from bs4 import BeautifulSoup
+from urllib.parse import urljoin, urlparse
+
+
+def normalize_url(url):
+    url = url.strip()
+
+    if not urlparse(url).scheme:
+        url = "https://" + url
+
+    parsed = urlparse(url)
+
+    if parsed.scheme not in ("http", "https") or not parsed.hostname:
+        raise ValueError("Please enter a valid HTTP or HTTPS URL.")
+
+    return url
+
+
+def crawl_products(url):
+    # Step 1: Validate URL
+    try:
+        url = normalize_url(url)
+    except ValueError as error:
+        print(error)
+        return
+
+    # Step 2: Request webpage
+    headers = {
+        "User-Agent": "Mozilla/5.0",
+        "Accept-Language": "en-US,en;q=0.9"
+    }
+
+    try:
+        response = requests.get(url, headers=headers, timeout=20)
+        response.raise_for_status()
+        print("HTTP Status:", response.status_code)
+
+    except requests.RequestException as error:
+        print("Request failed:", error)
+        return
+
+    # Step 3: Parse HTML
+    soup = BeautifulSoup(response.text, "html.parser")
+    products = []
+    seen_links = set()
+
+    def add_product(name, price, link):
+        name = str(name or "").strip()
+
+        if not name:
+            return
+
+        product_url = urljoin(url, str(link or url))
+
+        if urlparse(product_url).scheme not in ("http", "https"):
+            return
+
+        # Avoid duplicate product links
+        if product_url in seen_links:
+            return
+
+        seen_links.add(product_url)
+
+        products.append({
+            "Product_Name": name,
+            "Price": str(price or "N/A"),
+            "Product_Link": product_url
+        })
+
+    # Step 4: Extract JSON-LD structured product data
+    def process_jsonld(data):
+        if isinstance(data, list):
+            for entry in data:
+                process_jsonld(entry)
+
+        elif isinstance(data, dict):
+            # Handle nested structures such as @graph
+            if "@graph" in data:
+                process_jsonld(data["@graph"])
+
+            item_type = data.get("@type", "")
+            types = item_type if isinstance(item_type, list) else [item_type]
+
+            if any("product" in str(t).lower() for t in types):
+                name = data.get("name")
+                link = data.get("url", url)
+                offers = data.get("offers", {})
+                price = "N/A"
+
+                if isinstance(offers, list):
+                    offers = offers[0] if offers else {}
+
+                if isinstance(offers, dict):
+                    price = offers.get(
+                        "price",
+                        offers.get("lowPrice", "N/A")
+                    )
+
+                    if price == "N/A":
+                        specifications = offers.get("priceSpecification", {})
+                        if isinstance(specifications, dict):
+                            price = specifications.get("price", "N/A")
+
+                add_product(name, price, link)
+
+    for script in soup.select('script[type="application/ld+json"]'):
+        try:
+            structured_data = json.loads(script.string or script.get_text())
+            process_jsonld(structured_data)
+        except (json.JSONDecodeError, TypeError):
+            continue
+
+    # Step 5: Extract products from common HTML containers
+    selectors = [
+        "[data-component-type='s-search-result']",
+        ".product-card",
+        ".product-item",
+        ".product",
+        ".product_pod",
+        "li.product"
+    ]
+
+    containers = []
+    for selector in selectors:
+        containers.extend(soup.select(selector))
+
+    for item in containers:
+        title = item.select_one(
+            "[itemprop='name'], h2, h3, "
+            ".product-title, .product-name"
+        )
+
+        link = item.select_one("a[href]")
+
+        price = item.select_one(
+            "[itemprop='price'], .price, .product-price, "
+            ".a-price .a-offscreen"
+        )
+
+        if title:
+            name = title.get("content") or title.get_text(" ", strip=True)
+        else:
+            image = item.select_one("img[alt]")
+            name = image.get("alt", "").strip() if image else ""
+
+        price_value = "N/A"
+        if price:
+            price_value = (
+                price.get("content")
+                or price.get_text(" ", strip=True)
+            )
+
+        if link and name:
+            add_product(name, price_value, link.get("href"))
+
+    # Step 6: Display and save results
+    if products:
+        df = pd.DataFrame(products)
+        df.to_csv("products.csv", index=False)
+
+        print("\nProducts found:", len(df))
+        print(df.to_string(index=False))
+        print("\nData saved to products.csv")
+
+    else:
+        print("\nNo products detected.")
+        print("The page may use JavaScript, custom HTML,")
+        print("or restrictions on automated access.")
+
+
+# Step 7: Accept website URL
+website_url = input("Enter e-commerce website URL: ")
+crawl_products(website_url)
+
+         
+"""

@@ -1,0 +1,117 @@
+#2 Implement a program for retrieval of documents using inverted files
+
+
+# 2. Implement a program for retrieval of documents using inverted files.
+
+import re
+
+# Document collection
+documents = {
+    1: "Python is used for machine learning",
+    2: "Machine learning is part of artificial intelligence",
+    3: "Python is used in data science",
+    4: "Artificial intelligence uses data"
+}
+
+# Create inverted index
+inverted_index = {}
+
+for doc_id, text in documents.items():
+    words = set(re.findall(r'\b\w+\b', text.lower()))
+
+    for word in words:
+        inverted_index.setdefault(word, set()).add(doc_id)
+
+print("Inverted Index:")
+for word, doc_ids in sorted(inverted_index.items()):
+    print(word, ":", sorted(doc_ids))
+
+# Search documents
+query = re.findall(r'\b\w+\b', input("\nEnter search query: ").lower())
+
+results = set(documents.keys())
+
+for word in query:
+    results &= inverted_index.get(word, set())
+
+print("\nRetrieved Documents:")
+
+if results:
+    for doc_id in sorted(results):
+        print(f"Document {doc_id}: {documents[doc_id]}")
+else:
+    print("No matching documents found.")
+
+
+"""
+#Long Code:-
+# Document Retrieval Using Inverted Files
+
+
+# 2. Implement a program for retrieval of documents using inverted files.
+
+import re
+from collections import defaultdict
+
+# Step 1: Create document collection
+documents = {
+    1: "Python is a programming language",
+    2: "Python is widely used in machine learning",
+    3: "Machine learning is a branch of artificial intelligence",
+    4: "Data science uses Python and machine learning",
+    5: "Artificial intelligence helps in data analysis"
+}
+
+# Step 2: Preprocess text
+def preprocess(text):
+    return re.findall(r'\b\w+\b', text.lower())
+
+# Step 3: Build inverted index
+def build_inverted_index(documents):
+    index = defaultdict(set)
+
+    for doc_id, text in documents.items():
+        words = preprocess(text)
+
+        for word in words:
+            index[word].add(doc_id)
+
+    return index
+
+# Step 4: Retrieve documents using AND-based search
+def search_documents(query, index):
+    words = preprocess(query)
+
+    if not words:
+        return set()
+
+    results = index.get(words[0], set()).copy()
+
+    for word in words[1:]:
+        results.intersection_update(index.get(word, set()))
+
+    return results
+
+# Step 5: Generate inverted index
+inverted_index = build_inverted_index(documents)
+
+print("INVERTED INDEX")
+for word, doc_ids in sorted(inverted_index.items()):
+    print(f"{word}: {sorted(doc_ids)}")
+
+# Step 6: Accept search query
+query = input("\nEnter search query: ")
+
+# Step 7: Retrieve matching documents
+results = search_documents(query, inverted_index)
+
+# Step 8: Display results
+print("\nRETRIEVED DOCUMENTS")
+
+if results:
+    for doc_id in sorted(results):
+        print(f"Document {doc_id}: {documents[doc_id]}")
+else:
+    print("No matching documents found.")
+
+"""

@@ -1,0 +1,100 @@
+#Write a program for pre-processing of a text document such as stop word removal, stemming.
+
+# Write a program for pre-processing of a text document
+# such as stop word removal and stemming.
+
+import nltk
+import string
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+
+# Download required NLTK resources
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+nltk.download('stopwords', quiet=True)
+
+# Input text
+original_text = "The students are studying different subjects and working on projects."
+
+# Convert to lowercase and remove punctuation
+text = original_text.lower().translate(
+    str.maketrans('', '', string.punctuation)
+)
+
+# Tokenization
+words = word_tokenize(text)
+
+# Stop word removal
+stop_words = set(stopwords.words('english'))
+filtered_words = [w for w in words if w not in stop_words]
+
+# Stemming
+stemmer = PorterStemmer()
+stemmed_words = [stemmer.stem(w) for w in filtered_words]
+
+# Display results
+print("Original Text:", original_text)
+print("After Stop Word Removal:", filtered_words)
+print("After Stemming:", stemmed_words)
+
+
+"""
+#Long Code:-
+#Write a program for pre-processing of a text document such as stop word removal, stemming.
+
+
+# Write a program for pre-processing of a text document
+# such as stop word removal and stemming.
+
+import nltk
+import re
+from nltk.corpus import stopwords
+from nltk.stem import PorterStemmer
+from nltk.tokenize import word_tokenize
+
+# Download required NLTK resources
+nltk.download('punkt', quiet=True)
+nltk.download('punkt_tab', quiet=True)
+nltk.download('stopwords', quiet=True)
+
+# Input text document
+original_text = """
+Natural Language Processing is an important field of Artificial Intelligence.
+Students are learning different techniques for processing text documents.
+They are studying, analyzing, and working on projects.
+"""
+
+print("Original Text:\n", original_text)
+
+# Step 1: Convert text to lowercase
+text = original_text.lower()
+
+# Step 2: Remove punctuation and special characters
+text = re.sub(r'[^a-z\s]', ' ', text)
+
+# Step 3: Tokenization
+tokens = word_tokenize(text)
+print("\nTokens:\n", tokens)
+
+# Step 4: Stop word removal
+stop_words = set(stopwords.words('english'))
+filtered_words = [
+    word for word in tokens
+    if word not in stop_words
+]
+print("\nAfter Stop Word Removal:\n", filtered_words)
+
+# Step 5: Stemming
+stemmer = PorterStemmer()
+stemmed_words = [
+    stemmer.stem(word)
+    for word in filtered_words
+]
+print("\nAfter Stemming:\n", stemmed_words)
+
+# Step 6: Display the final preprocessed document
+processed_text = ' '.join(stemmed_words)
+print("\nFinal Preprocessed Text:\n", processed_text)
+
+"""

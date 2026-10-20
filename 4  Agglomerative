@@ -1,0 +1,217 @@
+#4 Implement Agglomerative hierarchical clustering algorithm using appropriate dataset.
+
+# using an appropriate dataset.
+%pip install pandas matplotlib scikit-learn scipy
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+
+# Step 1: Load or generate dataset
+file_path = r"C:\Users\admin\Downloads\customer_clustering_dataset.csv"
+
+if not os.path.exists(file_path):
+    file_path = "customer_clustering_dataset.csv"
+
+    if not os.path.exists(file_path):
+        df_new = pd.DataFrame({
+            "CustomerID": range(1, 16),
+            "AnnualIncome_k": [
+                15, 18, 20, 22, 25,
+                35, 38, 40, 42, 45,
+                60, 65, 70, 75, 80
+            ],
+            "SpendingScore": [
+                80, 75, 85, 70, 78,
+                40, 45, 35, 50, 42,
+                20, 25, 15, 30, 18
+            ]
+        })
+
+        df_new.to_csv(file_path, index=False)
+        print("Dummy dataset created:", file_path)
+
+df = pd.read_csv(file_path)
+
+# Step 2: Select features and handle missing values
+features = ["AnnualIncome_k", "SpendingScore"]
+
+if not all(col in df.columns for col in features):
+    raise ValueError("Dataset must contain AnnualIncome_k and SpendingScore.")
+
+X = df[features].apply(pd.to_numeric, errors="coerce")
+X = X.fillna(X.mean())
+
+if X.isnull().any().any() or len(X) < 3:
+    raise ValueError("Dataset needs at least 3 valid customer records.")
+
+# Step 3: Standardize data
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 4: Apply Agglomerative Clustering
+model = AgglomerativeClustering(
+    n_clusters=3,
+    linkage="ward"
+)
+
+df["Cluster"] = model.fit_predict(X_scaled)
+
+# Step 5: Display results
+print("\nCustomer Clustering Results:")
+print(df.to_string(index=False))
+
+print("\nNumber of Customers in Each Cluster:")
+print(df["Cluster"].value_counts().sort_index())
+
+# Step 6: Visualize clusters
+plt.figure(figsize=(8, 5))
+
+plt.scatter(
+    X["AnnualIncome_k"],
+    X["SpendingScore"],
+    c=df["Cluster"],
+    cmap="viridis",
+    s=80
+)
+
+plt.xlabel("Annual Income (thousands)")
+plt.ylabel("Spending Score")
+plt.title("Agglomerative Hierarchical Clustering")
+plt.tight_layout()
+plt.show()
+
+"""
+#Long Code:-
+
+# 4. Implement Agglomerative Hierarchical Clustering
+# using an appropriate dataset.
+
+import os
+import pandas as pd
+import matplotlib.pyplot as plt
+
+from scipy.cluster.hierarchy import dendrogram, linkage
+from sklearn.preprocessing import StandardScaler
+from sklearn.cluster import AgglomerativeClustering
+
+# Step 1: Load or generate dataset
+file_path = r"C:\Users\admin\Downloads\customer_clustering_dataset.csv"
+
+if not os.path.exists(file_path):
+    file_path = "customer_clustering_dataset.csv"
+
+    if not os.path.exists(file_path):
+        df_new = pd.DataFrame({
+            "CustomerID": range(1, 16),
+            "AnnualIncome_k": [
+                15, 18, 20, 22, 25,
+                35, 38, 40, 42, 45,
+                60, 65, 70, 75, 80
+            ],
+            "SpendingScore": [
+                80, 75, 85, 70, 78,
+                40, 45, 35, 50, 42,
+                20, 25, 15, 30, 18
+            ]
+        })
+
+        df_new.to_csv(file_path, index=False)
+        print("Dummy dataset created:", file_path)
+
+df = pd.read_csv(file_path)
+
+# Step 2: Inspect the dataset
+print("First five records:")
+print(df.head())
+
+print("\nDataset shape:", df.shape)
+print("\nDataset information:")
+df.info()
+
+# Step 3: Select clustering features
+features = ["AnnualIncome_k", "SpendingScore"]
+
+if not all(col in df.columns for col in features):
+    raise ValueError("Dataset must contain AnnualIncome_k and SpendingScore.")
+
+X = df[features].apply(pd.to_numeric, errors="coerce")
+
+# Handle missing values
+X = X.fillna(X.mean())
+
+if X.isnull().any().any() or len(X) < 3:
+    raise ValueError("Dataset needs at least 3 valid customer records.")
+
+# Step 4: Standardize features
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+# Step 5: Generate and plot dendrogram
+linkage_matrix = linkage(X_scaled, method="ward")
+
+labels = (
+    df["CustomerID"].astype(str).tolist()
+    if "CustomerID" in df.columns
+    else df.index.astype(str).tolist()
+)
+
+plt.figure(figsize=(12, 6))
+
+dendrogram(
+    linkage_matrix,
+    labels=labels
+)
+
+plt.title("Dendrogram - Agglomerative Hierarchical Clustering")
+plt.xlabel("Customer ID" if "CustomerID" in df.columns else "Record Index")
+plt.ylabel("Euclidean Distance")
+plt.tight_layout()
+plt.show()
+
+# Step 6: Apply Agglomerative Clustering
+model = AgglomerativeClustering(
+    n_clusters=3,
+    linkage="ward",
+    metric="euclidean"
+)
+
+df["Cluster"] = model.fit_predict(X_scaled)
+
+# Step 7: Display clustering results
+print("\nCustomer Clustering Results:")
+print(df.to_string(index=False))
+
+# Step 8: Count customers in each cluster
+print("\nNumber of Customers in Each Cluster:")
+print(df["Cluster"].value_counts().sort_index())
+
+# Step 9: Visualize clusters
+plt.figure(figsize=(9, 6))
+
+for cluster in sorted(df["Cluster"].unique()):
+    cluster_data = df[df["Cluster"] == cluster]
+
+    plt.scatter(
+        cluster_data["AnnualIncome_k"],
+        cluster_data["SpendingScore"],
+        s=90,
+        label=f"Cluster {cluster}"
+    )
+
+plt.xlabel("Annual Income (thousands)")
+plt.ylabel("Spending Score")
+plt.title("Customer Segmentation Using Agglomerative Clustering")
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
+
+# Step 10: Display cluster-wise averages
+print("\nCluster-wise Average Values:")
+print(df.groupby("Cluster")[features].mean().round(2))
+
+
+
+"""

@@ -1,59 +1,7 @@
-#2 Implement a program for retrieval of documents using inverted files
-
-
-# 2. Implement a program for retrieval of documents using inverted files.
-
-import re
-
-# Document collection
-documents = {
-    1: "Python is used for machine learning",
-    2: "Machine learning is part of artificial intelligence",
-    3: "Python is used in data science",
-    4: "Artificial intelligence uses data"
-}
-
-# Create inverted index
-inverted_index = {}
-
-for doc_id, text in documents.items():
-    words = set(re.findall(r'\b\w+\b', text.lower()))
-
-    for word in words:
-        inverted_index.setdefault(word, set()).add(doc_id)
-
-print("Inverted Index:")
-for word, doc_ids in sorted(inverted_index.items()):
-    print(word, ":", sorted(doc_ids))
-
-# Search documents
-query = re.findall(r'\b\w+\b', input("\nEnter search query: ").lower())
-
-results = set(documents.keys())
-
-for word in query:
-    results &= inverted_index.get(word, set())
-
-print("\nRetrieved Documents:")
-
-if results:
-    for doc_id in sorted(results):
-        print(f"Document {doc_id}: {documents[doc_id]}")
-else:
-    print("No matching documents found.")
-
-
-"""
-#Long Code:-
-# Document Retrieval Using Inverted Files
-
-
-# 2. Implement a program for retrieval of documents using inverted files.
-
+%pip install numpy pandas matplotlib scikit-learn seaborn scipy kneed nltk requests beautifulsoup4 biopython pydeseq2 openpyxl folium
 import re
 from collections import defaultdict
-
-# Step 1: Create document collection
+# Step 1: Create a collection of documents
 documents = {
     1: "Python is a programming language",
     2: "Python is widely used in machine learning",
@@ -61,57 +9,51 @@ documents = {
     4: "Data science uses Python and machine learning",
     5: "Artificial intelligence helps in data analysis"
 }
-
-# Step 2: Preprocess text
+# Step 2: Convert text to lowercase and extract words
 def preprocess(text):
-    return re.findall(r'\b\w+\b', text.lower())
-
-# Step 3: Build inverted index
+    return re.findall(r"\b\w+\b", text.lower())
+# Step 3: Build an inverted index mapping each word to its document IDs
 def build_inverted_index(documents):
     index = defaultdict(set)
-
     for doc_id, text in documents.items():
         words = preprocess(text)
-
         for word in words:
             index[word].add(doc_id)
-
     return index
-
-# Step 4: Retrieve documents using AND-based search
+# Step 4: Retrieve documents containing all query words
 def search_documents(query, index):
     words = preprocess(query)
-
     if not words:
         return set()
-
     results = index.get(words[0], set()).copy()
-
     for word in words[1:]:
         results.intersection_update(index.get(word, set()))
-
     return results
-
-# Step 5: Generate inverted index
+# Step 5: Generate and display the inverted index
 inverted_index = build_inverted_index(documents)
-
 print("INVERTED INDEX")
 for word, doc_ids in sorted(inverted_index.items()):
     print(f"{word}: {sorted(doc_ids)}")
-
-# Step 6: Accept search query
+# Step 6: Accept a query from the user
 query = input("\nEnter search query: ")
-
-# Step 7: Retrieve matching documents
+# Step 7: Search for documents matching every query word
 results = search_documents(query, inverted_index)
-
-# Step 8: Display results
+# Step 8: Display the retrieved documents
 print("\nRETRIEVED DOCUMENTS")
-
 if results:
     for doc_id in sorted(results):
         print(f"Document {doc_id}: {documents[doc_id]}")
 else:
     print("No matching documents found.")
-
-"""
+#Document retrieval: find relevant docs from collection of docs based on words or keywords by user
+#Inverted file: stores unique words along with list of docs in which that word appears
+#Agglomerative: Similar data points group uses bottom up where every data point starts as new cluster
+#algorithm repeatedly merges ,ost similar clusters until one cluster remains
+#Dendogram: Order in which clusters are merged and the distance at which each merge occurs
+# OUTPUT EXPLANATION:
+# 1. The document collection stores text with a unique document ID.
+# 2. Preprocessing converts words to lowercase and removes punctuation.
+# 3. The inverted index maps each word to the IDs of documents containing it.
+# 4. The search function intersects document ID sets for all query words.
+# 5. Matching documents are displayed in ascending document ID order.
+# 6. If no documents contain all query words, a no-match message is displayed.

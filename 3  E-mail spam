@@ -141,6 +141,9 @@ emails = [ "Congratulations! You won a free prize. Claim it now!",
 #Agglomerative: Similar data points group uses bottom up where every data point starts as new cluster
 #algorithm repeatedly merges ,ost similar clusters until one cluster remains
 #Dendogram: Order in which clusters are merged and the distance at which each merge occurs
+#"Congratulations! You won a free prize. Claim it now!",
+#"Please attend the project meeting tomorrow at 10 AM.",
+#"Get a cash reward immediately by clicking this link."
 # OUTPUT EXPLANATION:
 # 1. The dataset is loaded and its columns, dimensions and class counts are displayed.
 # 2. Column names are standardized, and the actual email text column is identified.

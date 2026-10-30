@@ -1,126 +1,7 @@
-#3 Implement e-mail spam filtering using text classification algorithm with appropriate dataset
-
-import os
-import pandas as pd
-from sklearn.model_selection import train_test_split
-from sklearn.feature_extraction.text import TfidfVectorizer
-from sklearn.naive_bayes import MultinomialNB
-from sklearn.metrics import accuracy_score, classification_report
-
-# Step 1: Load or generate the dataset
-file_path = "email_spam_dataset.csv"
-
-if not os.path.exists(file_path):
-    data = {
-        "email_text": [
-            "Win a free prize now",
-            "Claim your cash reward today",
-            "Congratulations you won a lottery",
-            "Get a free gift card",
-            "Click here to claim your reward",
-            "Earn money quickly from home",
-            "You have won a free vacation",
-            "Exclusive offer buy now",
-            "Urgent claim your bonus",
-            "Free entry into the lucky draw",
-            "Get cheap loans instantly",
-            "You are selected for a cash prize",
-            "Limited time offer buy today",
-            "Win money by entering this contest",
-            "Claim your free shopping voucher",
-            "Get a special discount now",
-            "Congratulations claim your gift",
-            "Earn extra income immediately",
-            "Free coupons available today",
-            "You won a cash reward",
-            "Please attend the project meeting",
-            "The meeting is scheduled for tomorrow",
-            "Please send the assignment report",
-            "Your appointment is confirmed",
-            "Let us discuss the project progress",
-            "The class starts at ten tomorrow",
-            "Please review the attached document",
-            "Your invoice has been processed",
-            "Can we reschedule our meeting",
-            "Thank you for your response",
-            "The report is ready for review",
-            "Please call me after lunch",
-            "Your order has been shipped",
-            "The team meeting starts at noon",
-            "Please submit your college assignment",
-            "I have shared the project files",
-            "The presentation is scheduled for Monday",
-            "Please confirm your attendance",
-            "The exam timetable is available",
-            "We will discuss the results tomorrow"
-        ],
-        "label": [
-            "spam"
-        ] * 20 + [
-            "ham"
-        ] * 20
-    }
-
-    pd.DataFrame(data).to_csv(file_path, index=False)
-    print("Dummy dataset created:", file_path)
-
-df = pd.read_csv(file_path)
-
-# Step 2: Clean the dataset
-df = df.dropna(subset=["email_text", "label"]).copy()
-df["email_text"] = df["email_text"].astype(str).str.strip()
-df["label"] = df["label"].astype(str).str.lower().str.strip()
-
-df = df[
-    df["email_text"].ne("") &
-    df["label"].isin(["spam", "ham"])
-]
-
-if df["label"].nunique() != 2 or df["label"].value_counts().min() < 2:
-    raise ValueError("Dataset must contain at least 2 emails each for spam and ham.")
-
-# Step 3: Separate input and output
-X = df["email_text"]
-y = df["label"]
-
-# Step 4: Split the dataset
-X_train, X_test, y_train, y_test = train_test_split(
-    X, y, test_size=0.25, random_state=42, stratify=y
-)
-
-# Step 5: Convert text into numerical features
-vectorizer = TfidfVectorizer(stop_words="english")
-X_train_tfidf = vectorizer.fit_transform(X_train)
-X_test_tfidf = vectorizer.transform(X_test)
-
-# Step 6: Train the Naive Bayes classifier
-model = MultinomialNB()
-model.fit(X_train_tfidf, y_train)
-
-# Step 7: Evaluate the model
-y_pred = model.predict(X_test_tfidf)
-
-print("\nAccuracy:", round(accuracy_score(y_test, y_pred) * 100, 2), "%")
-print("\nClassification Report:")
-print(classification_report(y_test, y_pred, zero_division=0))
-
-# Step 8: Predict a new email
-email = ["Congratulations! You won a free prize. Claim now!"]
-email_tfidf = vectorizer.transform(email)
-
-print("New Email:", email[0])
-print("Prediction:", model.predict(email_tfidf)[0].upper())
-
-
-"""
-#long Code:-
-
-# 3. Implement e-mail spam filtering using a text classification algorithm.
-
-import os
+%pip install numpy pandas matplotlib scikit-learn seaborn scipy kneed nltk requests beautifulsoup4 biopython pydeseq2 openpyxl folium
+# Step 1: Import required libraries
 import pandas as pd
 import matplotlib.pyplot as plt
-
 from sklearn.model_selection import train_test_split
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.naive_bayes import MultinomialNB
@@ -131,96 +12,60 @@ from sklearn.metrics import (
     confusion_matrix,
     ConfusionMatrixDisplay
 )
-
-# Step 1: Load or generate the dataset
-file_path = "email_spam_dataset.csv"
-
-if not os.path.exists(file_path):
-    spam_emails = [
-        "Win a free prize now",
-        "Claim your cash reward today",
-        "Congratulations you won a lottery",
-        "Get a free gift card",
-        "Click here to claim your reward",
-        "Earn money quickly from home",
-        "You have won a free vacation",
-        "Exclusive offer buy now",
-        "Urgent claim your bonus",
-        "Free entry into the lucky draw",
-        "Get cheap loans instantly",
-        "You are selected for a cash prize",
-        "Limited time offer buy today",
-        "Win money by entering this contest",
-        "Claim your free shopping voucher",
-        "Get a special discount now",
-        "Congratulations claim your gift",
-        "Earn extra income immediately",
-        "Free coupons available today",
-        "You won a cash reward"
-    ]
-
-    ham_emails = [
-        "Please attend the project meeting",
-        "The meeting is scheduled for tomorrow",
-        "Please send the assignment report",
-        "Your appointment is confirmed",
-        "Let us discuss the project progress",
-        "The class starts at ten tomorrow",
-        "Please review the attached document",
-        "Your invoice has been processed",
-        "Can we reschedule our meeting",
-        "Thank you for your response",
-        "The report is ready for review",
-        "Please call me after lunch",
-        "Your order has been shipped",
-        "The team meeting starts at noon",
-        "Please submit your college assignment",
-        "I have shared the project files",
-        "The presentation is scheduled for Monday",
-        "Please confirm your attendance",
-        "The exam timetable is available",
-        "We will discuss the results tomorrow"
-    ]
-
-    df_generated = pd.DataFrame({
-        "email_text": spam_emails + ham_emails,
-        "label": ["spam"] * len(spam_emails) +
-                 ["ham"] * len(ham_emails)
-    })
-
-    df_generated.to_csv(file_path, index=False)
-    print("Dummy dataset created:", file_path)
-
-# Step 2: Load and inspect the dataset
+# Step 2: Load the email dataset
+file_path = r"C:\Users\Dell\OneDrive\Desktop\BE_Datasets\IR\spam_ham_dataset.csv"
 df = pd.read_csv(file_path)
-
-print("First five records:")
-print(df.head())
-
+print("DATASET LOADED SUCCESSFULLY")
+print("\nFirst five records:\n", df.head())
 print("\nDataset shape:", df.shape)
+print("\nOriginal column names:", df.columns.tolist())
 print("\nMissing values:\n", df.isnull().sum())
 print("\nClass distribution:\n", df["label"].value_counts())
-
-# Step 3: Clean the dataset
-df = df.dropna(subset=["email_text", "label"]).copy()
+# Step 3: Standardize column names and identify email text
+df.columns = df.columns.str.strip().str.lower()
+# Remove unnecessary index columns
+df = df.loc[:, ~df.columns.str.startswith("unnamed")]
+# Support common column names for email text and labels
+text_col = next(
+    (col for col in ["email_text", "text", "message", "email", "body"]
+     if col in df.columns),
+    None
+)
+label_col = next(
+    (col for col in ["label", "category", "class", "v1"]
+     if col in df.columns),
+    None
+)
+if text_col is None or label_col is None:
+    raise ValueError(
+        f"Email text or label column not found. Available columns: "
+        f"{df.columns.tolist()}"
+    )
+# Rename columns to standard names
+df.rename(
+    columns={text_col: "email_text", label_col: "label"},
+    inplace=True
+)
+# Step 4: Clean email text and labels
+df.dropna(subset=["email_text", "label"], inplace=True)
 df["email_text"] = df["email_text"].astype(str).str.strip()
 df["label"] = df["label"].astype(str).str.lower().str.strip()
-
+# Keep only valid spam and ham records
 df = df[
     df["email_text"].ne("") &
     df["label"].isin(["spam", "ham"])
 ].copy()
-
+df.drop_duplicates(subset=["email_text", "label"], inplace=True)
+df.reset_index(drop=True, inplace=True)
+print("\nCleaned dataset shape:", df.shape)
+print("\nClass distribution after cleaning:\n", df["label"].value_counts())
+# Ensure both classes have sufficient records
 if df["label"].nunique() != 2 or df["label"].value_counts().min() < 2:
-    raise ValueError(
-        "Dataset must contain at least 2 emails each for spam and ham."
-    )
-
-# Step 4: Separate input and output
+    raise ValueError("The dataset must contain at least two spam and two ham emails.")
+# Step 5: Separate input emails and target labels
 X = df["email_text"]
 y = df["label"]
-
-# Step 5: Split into training and testing sets
+# Step 6: Split data into training and testing sets
 X_train, X_test, y_train, y_test = train_test_split(
     X,
     y,
@@ -228,8 +73,9 @@ X_train, X_test, y_train, y_test = train_test_split(
     random_state=42,
     stratify=y
 )
-
-# Step 6: Create the text classification pipeline
+print("\nTraining samples:", len(X_train))
+print("Testing samples:", len(X_test))
+# Step 7: Build a TF-IDF and Naive Bayes pipeline
 model = Pipeline([
     ("tfidf", TfidfVectorizer(
         lowercase=True,
@@ -238,20 +84,14 @@ model = Pipeline([
     )),
     ("classifier", MultinomialNB())
 ])
-
-# Step 7: Train the model
+# Step 8: Train the classification model
 model.fit(X_train, y_train)
-print("\nModel training completed.")
-
-# Step 8: Predict and evaluate
+print("\nMODEL TRAINING COMPLETED")
+# Step 9: Predict the classes of test emails
 y_pred = model.predict(X_test)
-
-print(
-    "\nAccuracy:",
-    round(accuracy_score(y_test, y_pred) * 100, 2),
-    "%"
-)
-
+# Step 10: Evaluate the model
+print("\nAccuracy:",
+      round(accuracy_score(y_test, y_pred) * 100, 2), "%")
 print("\nClassification Report:")
 print(classification_report(
     y_test,
@@ -259,33 +99,200 @@ print(classification_report(
     labels=["ham", "spam"],
     zero_division=0
 ))
-
-# Step 9: Display the confusion matrix
+# Step 11: Display the confusion matrix
 cm = confusion_matrix(y_test, y_pred, labels=["ham", "spam"])
-
-display = ConfusionMatrixDisplay(
+disp = ConfusionMatrixDisplay(
     confusion_matrix=cm,
     display_labels=["Ham", "Spam"]
 )
-
-display.plot()
+disp.plot()
 plt.title("Email Spam Classification")
 plt.tight_layout()
 plt.show()
+emails = input("Enter the email:")
+# Step 12: Enter email text and predict whether it is spam or ham
+print("\nEMAIL SPAM DETECTOR")
+print("Enter an email message to classify.")
+print("Type 'exit' to stop.")
+while True:
+    email = input("\nEnter email text: ").strip()
+    if email.lower() == "exit":
+        print("Email spam detector stopped.")
+        break
+    if not email:
+        print("Please enter some email text.")
+        continue
+    # Predict the email category using the trained model
+    prediction = model.predict([email])[0]
+    # Display the result
+    print("Classification:", prediction.upper())
+    # Display prediction probabilities
+    probabilities = model.predict_proba([email])[0]
+    for label, probability in zip(model.classes_, probabilities):
+        print(f"{label.upper()} probability: {probability * 100:.2f}%")
+"""
+emails = [ "Congratulations! You won a free prize. Claim it now!", 
+"Please attend the project meeting tomorrow at 10 AM.", 
+"Get a cash reward immediately by clicking this link." 
+]
+"""
+#Document retrieval: find relevant docs from collection of docs based on words or keywords by user
+#Inverted file: stores unique words along with list of docs in which that word appears
+#Agglomerative: Similar data points group uses bottom up where every data point starts as new cluster
+#algorithm repeatedly merges ,ost similar clusters until one cluster remains
+#Dendogram: Order in which clusters are merged and the distance at which each merge occurs
+# OUTPUT EXPLANATION:
+# 1. The dataset is loaded and its columns, dimensions and class counts are displayed.
+# 2. Column names are standardized, and the actual email text column is identified.
+# 3. Missing, empty and invalid records are removed.
+# 4. Email text is stored in email_text and labels are stored in label.
+# 5. Emails are divided into training and testing sets.
+# 6. TF-IDF converts email text into numerical feature vectors.
+# 7. Multinomial Naive Bayes learns patterns associated with spam and ham.
+# 8. The trained model predicts labels for unseen test emails.
+# 9. Accuracy and the classification report evaluate model performance.
+# 10. The confusion matrix displays correct and incorrect predictions.
+# 11. New email messages are classified as SPAM or HAM.
 
-# Step 10: Predict new emails
+"""
+# Assignment 03
+%pip install numpy pandas matplotlib scikit-learn seaborn scipy kneed nltk requests beautifulsoup4 biopython pydeseq2 openpyxl folium
+# Step 1: Import required libraries
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.naive_bayes import MultinomialNB
+from sklearn.pipeline import Pipeline
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    ConfusionMatrixDisplay
+)
+# Step 2: Load the email dataset
+file_path = r"C:\Users\Dell\OneDrive\Desktop\BE_Datasets\IR\spam_ham_dataset.csv"
+df = pd.read_csv(file_path)
+print("DATASET LOADED SUCCESSFULLY")
+print("\nFirst five records:\n", df.head())
+print("\nDataset shape:", df.shape)
+print("\nOriginal column names:", df.columns.tolist())
+print("\nMissing values:\n", df.isnull().sum())
+print("\nClass distribution:\n", df["label"].value_counts())
+# Step 3: Standardize column names and identify email text
+df.columns = df.columns.str.strip().str.lower()
+# Remove unnecessary index columns
+df = df.loc[:, ~df.columns.str.startswith("unnamed")]
+# Support common column names for email text and labels
+text_col = next(
+    (col for col in ["email_text", "text", "message", "email", "body"]
+     if col in df.columns),
+    None
+)
+label_col = next(
+    (col for col in ["label", "category", "class", "v1"]
+     if col in df.columns),
+    None
+)
+if text_col is None or label_col is None:
+    raise ValueError(
+        f"Email text or label column not found. Available columns: "
+        f"{df.columns.tolist()}"
+    )
+# Rename columns to standard names
+df.rename(
+    columns={text_col: "email_text", label_col: "label"},
+    inplace=True
+)
+# Step 4: Clean email text and labels
+df.dropna(subset=["email_text", "label"], inplace=True)
+df["email_text"] = df["email_text"].astype(str).str.strip()
+df["label"] = df["label"].astype(str).str.lower().str.strip()
+# Keep only valid spam and ham records
+df = df[
+    df["email_text"].ne("") &
+    df["label"].isin(["spam", "ham"])
+].copy()
+df.drop_duplicates(subset=["email_text", "label"], inplace=True)
+df.reset_index(drop=True, inplace=True)
+print("\nCleaned dataset shape:", df.shape)
+print("\nClass distribution after cleaning:\n", df["label"].value_counts())
+# Ensure both classes have sufficient records
+if df["label"].nunique() != 2 or df["label"].value_counts().min() < 2:
+    raise ValueError("The dataset must contain at least two spam and two ham emails.")
+# Step 5: Separate input emails and target labels
+X = df["email_text"]
+y = df["label"]
+# Step 6: Split data into training and testing sets
+X_train, X_test, y_train, y_test = train_test_split(
+    X,
+    y,
+    test_size=0.25,
+    random_state=42,
+    stratify=y
+)
+print("\nTraining samples:", len(X_train))
+print("Testing samples:", len(X_test))
+# Step 7: Build a TF-IDF and Naive Bayes pipeline
+model = Pipeline([
+    ("tfidf", TfidfVectorizer(
+        lowercase=True,
+        stop_words="english",
+        ngram_range=(1, 2)
+    )),
+    ("classifier", MultinomialNB())
+])
+# Step 8: Train the classification model
+model.fit(X_train, y_train)
+print("\nMODEL TRAINING COMPLETED")
+# Step 9: Predict the classes of test emails
+y_pred = model.predict(X_test)
+# Step 10: Evaluate the model
+print("\nAccuracy:",
+      round(accuracy_score(y_test, y_pred) * 100, 2), "%")
+print("\nClassification Report:")
+print(classification_report(
+    y_test,
+    y_pred,
+    labels=["ham", "spam"],
+    zero_division=0
+))
+# Step 11: Display the confusion matrix
+cm = confusion_matrix(y_test, y_pred, labels=["ham", "spam"])
+disp = ConfusionMatrixDisplay(
+    confusion_matrix=cm,
+    display_labels=["Ham", "Spam"]
+)
+disp.plot()
+plt.title("Email Spam Classification")
+plt.tight_layout()
+plt.show()
+# Step 12: Classify new email messages
 emails = [
     "Congratulations! You won a free prize. Claim it now!",
     "Please attend the project meeting tomorrow at 10 AM.",
     "Get a cash reward immediately by clicking this link."
 ]
-
 predictions = model.predict(emails)
-
-print("\nNew Email Predictions:")
+print("\nNEW EMAIL PREDICTIONS:")
 for email, prediction in zip(emails, predictions):
     print("\nEmail:", email)
     print("Classification:", prediction.upper())
-
-
+#Document retrieval: find relevant docs from collection of docs based on words or keywords by user
+#Inverted file: stores unique words along with list of docs in which that word appears
+#Agglomerative: Similar data points group uses bottom up where every data point starts as new cluster
+#algorithm repeatedly merges ,ost similar clusters until one cluster remains
+#Dendogram: Order in which clusters are merged and the distance at which each merge occurs
+# OUTPUT EXPLANATION:
+# 1. The dataset is loaded and its columns, dimensions and class counts are displayed.
+# 2. Column names are standardized, and the actual email text column is identified.
+# 3. Missing, empty and invalid records are removed.
+# 4. Email text is stored in email_text and labels are stored in label.
+# 5. Emails are divided into training and testing sets.
+# 6. TF-IDF converts email text into numerical feature vectors.
+# 7. Multinomial Naive Bayes learns patterns associated with spam and ham.
+# 8. The trained model predicts labels for unseen test emails.
+# 9. Accuracy and the classification report evaluate model performance.
+# 10. The confusion matrix displays correct and incorrect predictions.
+# 11. New email messages are classified as SPAM or HAM.
 """

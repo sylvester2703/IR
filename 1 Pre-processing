@@ -1,100 +1,81 @@
-#Write a program for pre-processing of a text document such as stop word removal, stemming.
-
-# Write a program for pre-processing of a text document
-# such as stop word removal and stemming.
-
-import nltk
-import string
-from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
-from nltk.tokenize import word_tokenize
-
-# Download required NLTK resources
-nltk.download('punkt', quiet=True)
-nltk.download('punkt_tab', quiet=True)
-nltk.download('stopwords', quiet=True)
-
-# Input text
-original_text = "The students are studying different subjects and working on projects."
-
-# Convert to lowercase and remove punctuation
-text = original_text.lower().translate(
-    str.maketrans('', '', string.punctuation)
-)
-
-# Tokenization
-words = word_tokenize(text)
-
-# Stop word removal
-stop_words = set(stopwords.words('english'))
-filtered_words = [w for w in words if w not in stop_words]
-
-# Stemming
-stemmer = PorterStemmer()
-stemmed_words = [stemmer.stem(w) for w in filtered_words]
-
-# Display results
-print("Original Text:", original_text)
-print("After Stop Word Removal:", filtered_words)
-print("After Stemming:", stemmed_words)
-
-
-"""
-#Long Code:-
-#Write a program for pre-processing of a text document such as stop word removal, stemming.
-
-
-# Write a program for pre-processing of a text document
-# such as stop word removal and stemming.
-
+%pip install numpy pandas matplotlib scikit-learn seaborn scipy kneed nltk requests beautifulsoup4 biopython pydeseq2 openpyxl folium
 import nltk
 import re
 from nltk.corpus import stopwords
-from nltk.stem import PorterStemmer
+from nltk.stem import PorterStemmer, WordNetLemmatizer
 from nltk.tokenize import word_tokenize
-
-# Download required NLTK resources
-nltk.download('punkt', quiet=True)
-nltk.download('punkt_tab', quiet=True)
-nltk.download('stopwords', quiet=True)
-
+# Download the required NLTK resources
+nltk.download("punkt", quiet=True)
+nltk.download("punkt_tab", quiet=True)
+nltk.download("stopwords", quiet=True)
+nltk.download("wordnet", quiet=True)
+nltk.download("omw-1.4", quiet=True)
 # Input text document
 original_text = """
 Natural Language Processing is an important field of Artificial Intelligence.
 Students are learning different techniques for processing text documents.
 They are studying, analyzing, and working on projects.
+Machine learning models are processing large amounts of data.
+Visit https://example.com for more information.
 """
-
 print("Original Text:\n", original_text)
-
-# Step 1: Convert text to lowercase
+# Step 1: Convert all text to lowercase
 text = original_text.lower()
-
-# Step 2: Remove punctuation and special characters
-text = re.sub(r'[^a-z\s]', ' ', text)
-
-# Step 3: Tokenization
+# Step 2: Remove HTML tags
+text = re.sub(r"<.*?>", " ", text)
+# Step 3: Remove URLs
+text = re.sub(r"http\S+|www\S+", " ", text)
+# Step 4: Remove punctuation, numbers and special characters
+text = re.sub(r"[^a-z\s]", " ", text)
+# Step 5: Remove extra spaces
+text = re.sub(r"\s+", " ", text).strip()
+# Step 6: Split the text into individual words
 tokens = word_tokenize(text)
 print("\nTokens:\n", tokens)
-
-# Step 4: Stop word removal
-stop_words = set(stopwords.words('english'))
+# Step 7: Remove common English stop words
+stop_words = set(stopwords.words("english"))
 filtered_words = [
     word for word in tokens
     if word not in stop_words
 ]
 print("\nAfter Stop Word Removal:\n", filtered_words)
-
-# Step 5: Stemming
+# Step 8: Reduce words to their stems using Porter Stemmer
 stemmer = PorterStemmer()
 stemmed_words = [
     stemmer.stem(word)
     for word in filtered_words
 ]
-print("\nAfter Stemming:\n", stemmed_words)
-
-# Step 6: Display the final preprocessed document
-processed_text = ' '.join(stemmed_words)
-print("\nFinal Preprocessed Text:\n", processed_text)
-
-"""
+print("\nAfter Porter Stemming:\n", stemmed_words)
+# Step 9: Reduce words to their meaningful root forms using WordNet Lemmatizer
+lemmatizer = WordNetLemmatizer()
+lemmatized_words = [
+    lemmatizer.lemmatize(word, pos="v")
+    for word in filtered_words
+]
+# Apply noun lemmatization to the output of verb lemmatization
+lemmatized_words = [
+    lemmatizer.lemmatize(word, pos="n")
+    for word in lemmatized_words
+]
+print("\nAfter WordNet Lemmatization:\n", lemmatized_words)
+# Step 10: Combine the stemmed words into final text
+stemmed_text = " ".join(stemmed_words)
+print("\nFinal Preprocessed Text using Stemming:\n", stemmed_text)
+# Step 11: Combine the lemmatized words into final text
+lemmatized_text = " ".join(lemmatized_words)
+print("\nFinal Preprocessed Text using Lemmatization:\n", lemmatized_text)
+#Document retrieval: find relevant docs from collection of docs based on words or keywords by user
+#Inverted file: stores unique words along with list of docs in which that word appears
+#Agglomerative: Similar data points group uses bottom up where every data point starts as new cluster
+#algorithm repeatedly merges ,ost similar clusters until one cluster remains
+#Dendogram: Order in which clusters are merged and the distance at which each merge occurs
+# OUTPUT EXPLANATION:
+# 1. Original Text displays the input document before processing.
+# 2. Lowercase Conversion converts all characters into lowercase.
+# 3. HTML and URL Removal eliminates unwanted tags and web links.
+# 4. Special Character Removal eliminates punctuation, numbers and symbols.
+# 5. Tokens displays individual words after tokenization.
+# 6. Stop Word Removal eliminates common words such as "is", "are" and "and".
+# 7. Porter Stemming reduces words to root-like forms, such as "learning" to "learn".
+# 8. WordNet Lemmatization converts words into meaningful dictionary forms.
+# 9. Final Preprocessed Text displays the processed document using both techniques.
